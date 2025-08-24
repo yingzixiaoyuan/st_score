@@ -1,3 +1,9 @@
 [client]
 showSidebarNavigation = false
 
+[server]
+headless = true
+port = 8501
+
+[global]
+developMode = false

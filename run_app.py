@@ -1,14 +1,13 @@
 import os
 import sys
 from pathlib import Path
+import json
 
-os.environ["STREAMLIT_DEVELOPMENT_MODE"] = "0"
-os.environ["STREAMLIT_ENV"] = "production"
-os.environ["BROWSER"] = "none"
-os.environ["STREAMLIT_SERVER_ENABLE_CORS"] = "false"
-os.environ["STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION"] = "false"
-os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
-import streamlit.web.cli as stcli
+from database import DatabaseManager
+
+os.environ["STREAMLIT_DEVELOP_MODE"] = "false"
+os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"  # 无需打开浏览器
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"     # 可修改端口
 
 
 def resolve_path(path: str) -> str:
@@ -16,21 +15,65 @@ def resolve_path(path: str) -> str:
     return str(Path(base_path) / path)
 
 
-config_dir = os.path.join(os.path.expanduser("~"), ".streamlit")
-os.makedirs(config_dir, exist_ok=True)
-with open(os.path.join(config_dir, "config.toml"), "w", encoding="utf-8") as f:
-    f.write("""
-[server]
-headless = true
-port = 8501
-enableCORS = false
-enableXsrfProtection = false
+def ensure_database_exists() -> None:
+    """服务启动时确保数据库文件存在，不存在则创建并初始化表结构。"""
+    db_path = "student_scores.db"
+    if not os.path.exists(db_path):
+        # 确保目录存在
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+        # 创建并初始化数据库
+        DatabaseManager(db_path=db_path)
 
-[browser]
-gatherUsageStats = false
-""")
+
+def ensure_config_exists() -> None:
+    """服务启动时确保 config 目录与默认配置文件存在。"""
+    config_dir = "config"
+    Path(config_dir).mkdir(parents=True, exist_ok=True)
+
+    color_settings_path = Path(config_dir) / "color_settings.json"
+    if not color_settings_path.exists():
+        default_colors = {
+            "优秀": {
+                "min_score": 90,
+                "max_score": 150,
+                "color": "#90EE90",
+                "description": "90分及以上",
+            },
+            "良好": {
+                "min_score": 80,
+                "max_score": 89,
+                "color": "#87CEEB",
+                "description": "80-89分",
+            },
+            "中等": {
+                "min_score": 70,
+                "max_score": 79,
+                "color": "#F0E68C",
+                "description": "70-79分",
+            },
+            "及格": {
+                "min_score": 60,
+                "max_score": 69,
+                "color": "#FFB6C1",
+                "description": "60-69分",
+            },
+            "不及格": {
+                "min_score": 0,
+                "max_score": 59,
+                "color": "#FFA07A",
+                "description": "60分以下",
+            },
+        }
+        with open(color_settings_path, "w", encoding="utf-8") as f:
+            json.dump(default_colors, f, indent=2, ensure_ascii=False)
+
 
 if __name__ == "__main__":
+    # 启动前检查数据库是否存在，不存在则创建
+    ensure_database_exists()
+    # 启动前检查 config 目录和默认配置
+    ensure_config_exists()
+    import streamlit.web.cli as stcli
     sys.argv = [
         "streamlit",
         "run",

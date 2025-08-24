@@ -37,7 +37,7 @@ jobs:
         pyinstaller --noconfirm --onefile --console --name StudentScoresApp `
          --collect-all streamlit `
          --copy-metadata streamlit `
-         --add-data ".streamlit;." `
+         --add-data ".streamlit;.streamlit" `
          --add-data "app.py;." `
          --add-data "analyzer.py;." `
          --add-data "database.py;." `
@@ -57,6 +57,8 @@ jobs:
         $out = Join-Path $env:GITHUB_WORKSPACE 'upload'
         New-Item -ItemType Directory -Path $out -Force | Out-Null
         Copy-Item dist/StudentScoresApp.exe $out/
+        Copy-Item config $out/ -Recurse -Force
+        Copy-Item .streamlit $out/ -Recurse -Force
         if (Test-Path dist-extra) { Copy-Item dist-extra/* $out/ -Recurse }
 
     - name: Upload artifact
@@ -72,5 +74,6 @@ jobs:
       with:
         files: |
           upload/StudentScoresApp.exe
-      env:
+          upload/config/**
+          upload/.streamlit/**
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
