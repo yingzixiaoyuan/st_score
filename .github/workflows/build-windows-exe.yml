@@ -21,7 +21,6 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: ma/streamlit_version
 
     steps:
     - name: Checkout
@@ -33,6 +32,7 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
+      working-directory: ma/streamlit_version
       run: |
         python -m pip install --upgrade pip
         if (Test-Path requirements_streamlit.txt) {
@@ -43,14 +43,17 @@ jobs:
         pip install pyinstaller pillow
 
     - name: Generate icon
+      working-directory: ma/streamlit_version
       run: |
         python build_assets/make_icon.py
 
     - name: Verify launcher exists
+      working-directory: ma/streamlit_version
       run: |
         if (!(Test-Path run_app.py)) { echo "run_app.py not found"; exit 1 }
 
     - name: Build EXE with PyInstaller
+      working-directory: ma/streamlit_version
       run: |
         pyinstaller --noconfirm ^
           --onefile ^
@@ -71,6 +74,7 @@ jobs:
           run_app.py
 
     - name: Archive artifacts
+      working-directory: ma/streamlit_version
       run: |
         New-Item -ItemType Directory -Path upload -Force | Out-Null
         Copy-Item dist/StudentScoresApp.exe upload/
