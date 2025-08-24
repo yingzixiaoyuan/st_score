@@ -36,7 +36,7 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        pyinstaller --noconfirm --onefile --windowed --name StudentScoresApp `
+        pyinstaller --noconfirm --onefile --console --name StudentScoresApp `
          --collect-all streamlit `
           --add-data ".streamlit;." `
           --add-data "app.py;." `
