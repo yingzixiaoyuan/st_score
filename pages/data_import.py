@@ -5,7 +5,7 @@
 
 import streamlit as st
 from config import UPLOAD_CONFIG
-from pathlib import Path
+import os
 
 
 def show_data_import_page(analyzer):
@@ -110,11 +110,10 @@ def show_data_import_page(analyzer):
         # 自动导入所有Excel文件
         if excel_count > 0:
             st.subheader("🚀 自动导入")
-            
             # 检查是否正在导入
             if 'importing' not in st.session_state:
                 st.session_state['importing'] = False
-            
+
             if not st.session_state['importing']:
                 if st.button("🚀 开始导入", type="primary"):
                     st.session_state['importing'] = True
@@ -137,7 +136,7 @@ def show_data_import_page(analyzer):
                     # 预检查：已存在考试跳过
                     files_to_import = []
                     for file in excel_files:
-                        exam_name = Path(file.name).stem
+                        exam_name = os.path.splitext(file.name)[0]
                         try:
                             existing_exam = analyzer.db.get_exam_by_name(exam_name)
                             if existing_exam is not None and not existing_exam.empty:

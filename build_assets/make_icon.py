@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw, ImageFilter
+from pathlib import Path
 
 
 def create_gradient(
@@ -74,6 +75,7 @@ def save_ico(img: Image.Image, path: str):
 if __name__ == "__main__":
     icon_png = create_icon_png(512)
     # 同步输出 ico 到工作目录
-    save_ico(icon_png, "icon.ico")
+    out_dir = Path(__file__).parent
+    save_ico(icon_png, str(out_dir / "icon.ico"))
     # 同时保存预览 PNG（可选）
-    icon_png.save("icon_preview.png")
+    icon_png.save(str(out_dir / "icon_preview.png"))
