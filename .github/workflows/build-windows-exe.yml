@@ -60,7 +60,6 @@ jobs:
           --add-data "pages;pages" `
           --add-data "build_assets;build_assets" `
           --add-data "$streamlitPath\static;streamlit\static" `
-          --add-data "$streamlitPath\frontend\build;streamlit\frontend\build" `
           --icon build_assets/icon.ico `
           run_app.py
 
