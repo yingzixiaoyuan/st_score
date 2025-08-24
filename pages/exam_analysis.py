@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import io
-from .color_settings import get_score_color, load_color_settings
+from pages.color_settings import get_score_color, load_color_settings
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 
