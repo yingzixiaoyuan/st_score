@@ -18,7 +18,13 @@ def main():
     if current_dir and current_dir not in sys.path:
         sys.path.insert(0, current_dir)
 
-    bootstrap.run(app_path, "", [], {})
+    bootstrap.run(
+        app_path,
+        "--server.port=8501",
+        "--server.headless=true",
+        "--server.enableCORS=false",
+        "--server.enableXsrfProtection=false"
+    )
 
 
 if __name__ == "__main__":
