@@ -1,8 +1,6 @@
-from streamlit.web import cli
+import streamlit.web.cli as stcli
+import sys
 
-
-if __name__ == "__main__":
-    cli._main_run_clExplicit(
-        file="app.py",
-        command_line="streamlit run"
-    )
+if __name__ == '__main__':
+    sys.argv = ["streamlit", "run", "app.py", "--server.headless=true"]
+    sys.exit(stcli.main())
