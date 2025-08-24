@@ -3,6 +3,18 @@
 使用模块化结构，代码更清晰易维护
 """
 
+import sys
+
+# 如果是直接运行（不是通过 streamlit CLI）
+if __name__ == "__main__" and "streamlit" not in sys.argv[0]:
+    import streamlit.web.cli as stcli
+    # 注意：app_path 用 __file__ 获取准路径
+    sys.argv = ["streamlit", "run", __file__,
+                "--server.headless=true",
+                "--server.port=8501",
+                "--server.address=0.0.0.0"]
+    sys.exit(stcli.main())
+
 import streamlit as st
 from database import DatabaseManager
 from analyzer import ScoreAnalyzer
@@ -42,18 +54,18 @@ def main():
 
     # 页面选项
     page_options = PAGE_CONFIG['OPTIONS']
-    
+
     # 初始化页面选择状态
     if 'current_page' not in st.session_state:
         st.session_state['current_page'] = PAGE_CONFIG['DEFAULT']
-    
+
     # 页面选择（使用按钮组，更稳定）
     for page_name in page_options:
         if st.sidebar.button(
-            page_name, 
+            page_name,
             key=f"btn_{page_name}",
             use_container_width=True,
-            type=("primary" if page_name == st.session_state['current_page'] 
+            type=("primary" if page_name == st.session_state['current_page']
                   else "secondary")
         ):
             st.session_state['current_page'] = page_name

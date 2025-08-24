@@ -37,6 +37,8 @@ jobs:
         pyinstaller --noconfirm --onefile --console --name StudentScoresApp `
          --collect-all streamlit `
          --copy-metadata streamlit `
+         --hidden-import=streamlit.web.cli `
+         --hidden-import=streamlit.web.bootstrap `
          --add-data "app.py;." `
          --add-data "analyzer.py;." `
          --add-data "database.py;." `
