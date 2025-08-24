@@ -20,10 +20,14 @@ def main():
 
     bootstrap.run(
         app_path,
-        "--server.port=8501",
-        "--server.headless=true",
-        "--server.enableCORS=false",
-        "--server.enableXsrfProtection=false"
+        "",
+        [],  # args 列表
+        {
+            "server.port": 8501,
+            "server.headless": True,
+            "server.enableCORS": False,
+            "server.enableXsrfProtection": False
+        }
     )
 
 
