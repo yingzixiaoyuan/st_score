@@ -32,8 +32,8 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      working-directory: ma/streamlit_version
       run: |
+        cd ma\streamlit_version
         python -m pip install --upgrade pip
         if (Test-Path requirements_streamlit.txt) {
           pip install -r requirements_streamlit.txt
@@ -43,18 +43,18 @@ jobs:
         pip install pyinstaller pillow
 
     - name: Generate icon
-      working-directory: ma/streamlit_version
       run: |
+        cd ma\streamlit_version
         python build_assets/make_icon.py
 
     - name: Verify launcher exists
-      working-directory: ma/streamlit_version
       run: |
+        cd ma\streamlit_version
         if (!(Test-Path run_app.py)) { echo "run_app.py not found"; exit 1 }
 
     - name: Build EXE with PyInstaller
-      working-directory: ma/streamlit_version
       run: |
+        cd ma\streamlit_version
         pyinstaller --noconfirm ^
           --onefile ^
           --name StudentScoresApp ^
@@ -74,8 +74,8 @@ jobs:
           run_app.py
 
     - name: Archive artifacts
-      working-directory: ma/streamlit_version
       run: |
+        cd ma\streamlit_version
         New-Item -ItemType Directory -Path upload -Force | Out-Null
         Copy-Item dist/StudentScoresApp.exe upload/
         if (Test-Path dist-extra) { Copy-Item dist-extra/* upload/ -Recurse }
