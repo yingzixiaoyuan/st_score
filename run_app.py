@@ -1,35 +1,33 @@
 import os
 import sys
+from pathlib import Path
 import streamlit.web.bootstrap as bootstrap
 
+# 如果是 PyInstaller 打包后的，可执行文件在 _MEIPASS 下
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
 
-def main():
-    app_path = os.path.join(os.path.dirname(__file__), "app.py")
-    if not os.path.exists(app_path):
-        print(f"app.py not found at {app_path}")
-        sys.exit(1)
+# 让 Streamlit 默认用打包的静态文件目录（阻止它去找 Node dev server）
+os.environ["STREAMLIT_STATIC_FOLDER"] = os.path.join(os.getcwd(), "streamlit", "static")
 
-    # 运行在无头模式，关闭遥测
-    os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "true")
-    os.environ.setdefault("STREAMLIT_BROWSER_GATHER_USAGE_STATS", "false")
+# 常规配置
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
+os.environ["STREAMLIT_SERVER_ENABLECORS"] = "false"
+os.environ["STREAMLIT_SERVER_ENABLEXSRFPROTECTION"] = "false"
 
-    # 确保当前目录在 sys.path 中，便于导入本地模块
-    current_dir = os.path.dirname(__file__)
-    if current_dir and current_dir not in sys.path:
-        sys.path.insert(0, current_dir)
+# app 入口
+app_path = str(Path(__file__).parent / "app.py")
 
-    bootstrap.run(
-        app_path,
-        "",
-        [],  # args 列表
-        {
-            "server.port": 8501,
-            "server.headless": True,
-            "server.enableCORS": False,
-            "server.enableXsrfProtection": False
-        }
-    )
-
-
-if __name__ == "__main__":
-    main()
+# 启动 Streamlit
+bootstrap.run(
+    app_path,
+    [],
+    {},
+    flag_options={
+        "server.port": 8501,
+        "server.headless": True,
+        "server.enableCORS": False,
+        "server.enableXsrfProtection": False
+    }
+)
