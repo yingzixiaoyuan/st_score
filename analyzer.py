@@ -5,7 +5,7 @@
 
 import pandas as pd
 import numpy as np
-from pathlib import Path
+import os
 
 
 class ScoreAnalyzer:
@@ -35,7 +35,7 @@ class ScoreAnalyzer:
                 return False, f"Excel文件缺少必需列：{', '.join(missing_columns)}"
 
             # 提取考试名称
-            exam_name = Path(uploaded_file.name).stem
+            exam_name = os.path.splitext(uploaded_file.name)[0]
             print(f"考试名称: {exam_name}")
 
             # 第一步：处理考试信息
@@ -88,9 +88,9 @@ class ScoreAnalyzer:
                 success = self.db.update_exam_info(
                     exam_id, file_path, student_count)
                 if success:
-                    return {'success': True, 'exam_id': exam_id, 'message': f"考试信息更新成功"}
+                    return {'success': True, 'exam_id': exam_id, 'message': "考试信息更新成功"}
                 else:
-                    return {'success': False, 'message': f"更新考试信息失败"}
+                    return {'success': False, 'message': "更新考试信息失败"}
             else:
                 # 考试不存在，插入新记录
                 print(f"考试 '{exam_name}' 不存在，将创建新记录")
@@ -98,9 +98,9 @@ class ScoreAnalyzer:
                     exam_name, file_path, student_count)
 
                 if exam_id:
-                    return {'success': True, 'exam_id': exam_id, 'message': f"考试创建成功"}
+                    return {'success': True, 'exam_id': exam_id, 'message': "考试创建成功"}
                 else:
-                    return {'success': False, 'message': f"创建考试失败"}
+                    return {'success': False, 'message': "创建考试失败"}
 
         except Exception as e:
             print(f"处理考试信息时出错: {e}")
@@ -150,7 +150,7 @@ class ScoreAnalyzer:
                         print(f"警告：学生信息插入失败，学号: {student_id_value}，姓名: {name}")
 
             # 打印学生统计信息
-            print(f"本次考试学生统计：")
+            print("本次考试学生统计：")
             print(
                 f"  - 现有学生：{len(existing_students)} 人 ({', '.join(existing_students[:5])}{'...' if len(existing_students) > 5 else ''})")
             print(

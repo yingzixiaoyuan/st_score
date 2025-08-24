@@ -5,7 +5,7 @@
 
 import streamlit as st
 import json
-from pathlib import Path
+import os
 
 
 def show_color_settings_page():
@@ -221,10 +221,10 @@ def show_color_settings_page():
 def save_color_settings(colors):
     """保存颜色设置到文件"""
     try:
-        config_dir = Path("config")
-        config_dir.mkdir(exist_ok=True)
+        config_dir = os.path.join("config")
+        os.makedirs(config_dir, exist_ok=True)
 
-        config_file = config_dir / "color_settings.json"
+        config_file = os.path.join(config_dir, "color_settings.json")
         with open(config_file, 'w', encoding='utf-8') as f:
             json.dump(colors, f, indent=2, ensure_ascii=False)
 
@@ -237,8 +237,8 @@ def save_color_settings(colors):
 def load_color_settings():
     """从文件加载颜色设置"""
     try:
-        config_file = Path("config/color_settings.json")
-        if config_file.exists():
+        config_file = os.path.join("config", "color_settings.json")
+        if os.path.exists(config_file):
             with open(config_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
     except Exception:
