@@ -1,35 +1,42 @@
-name: Build EXE
+name: Build Windows EXE (PyInstaller)
 
 on:
+  workflow_dispatch:
   push:
     branches:
-    - main
+    - release
+    tags:
+    - 'v*'
+  pull_request:
+    branches:
+    - release
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip uninstall -y streamlit || exit 0
-        pip install streamlit pandas plotly openpyxl numpy pillow
-        pip install pyinstaller
+        pip install -r requirements_streamlit.txt
+
+    - name: Generate icon
+      run: |
+        python build_assets/make_icon.py
 
     - name: Build EXE with PyInstaller
       run: |
-        $streamlitPath = python -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))"
         pyinstaller --noconfirm --onefile --name StudentScoresApp `
-          --collect-all streamlit `
+          --add-data ".streamlit;." `
           --add-data "app.py;." `
           --add-data "analyzer.py;." `
           --add-data "database.py;." `
@@ -39,13 +46,28 @@ jobs:
           --add-data "config;config" `
           --add-data "pages;pages" `
           --add-data "build_assets;build_assets" `
-          --add-data "$streamlitPath\static;streamlit/static" `
-          --add-data "$streamlitPath\frontend\build;streamlit/frontend/build" `
           --icon build_assets/icon.ico `
-          run_app.py
+          app.py
+
+    - name: Archive artifacts
+      run: |
+        $out = Join-Path $env:GITHUB_WORKSPACE 'upload'
+        New-Item -ItemType Directory -Path $out -Force | Out-Null
+        Copy-Item dist/StudentScoresApp.exe $out/
+        if (Test-Path dist-extra) { Copy-Item dist-extra/* $out/ -Recurse }
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: StudentScoresApp
-        path: dist/StudentScoresApp.exe
+        name: StudentScoresApp-windows
+        path: upload/*
+        if-no-files-found: error
+
+    - name: Create GitHub Release (for tags)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          upload/StudentScoresApp.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
