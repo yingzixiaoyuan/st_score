@@ -48,7 +48,7 @@ jobs:
           --add-data "pages;pages" `
           --add-data "build_assets;build_assets" `
           --icon build_assets/icon.ico `
-          app.py
+          run_app.py
 
     - name: Archive artifacts
       run: |
