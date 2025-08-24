@@ -2,19 +2,6 @@
 学生成绩分析器 - 主程序
 使用模块化结构，代码更清晰易维护
 """
-
-import sys
-
-# 如果是直接运行（不是通过 streamlit CLI）
-if __name__ == "__main__" and "streamlit" not in sys.argv[0]:
-    import streamlit.web.cli as stcli
-    # 注意：app_path 用 __file__ 获取准路径
-    sys.argv = ["streamlit", "run", __file__,
-                "--server.headless=true",
-                "--server.port=8501",
-                "--server.address=0.0.0.0"]
-    sys.exit(stcli.main())
-
 import streamlit as st
 from database import DatabaseManager
 from analyzer import ScoreAnalyzer
