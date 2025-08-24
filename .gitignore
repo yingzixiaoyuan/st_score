@@ -1,0 +1,21 @@
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Tooling/test caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# General caches
+.cache/
+.ipynb_checkpoints/
+
+# Streamlit cache (project-local)
+.streamlit/cache/
+
+# macOS
+.DS_Store
+
+

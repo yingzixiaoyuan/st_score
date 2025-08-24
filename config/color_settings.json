@@ -1,0 +1,32 @@
+{
+  "优秀": {
+    "min_score": 90,
+    "max_score": 100,
+    "color": "#9096ee",
+    "description": "90分及以上"
+  },
+  "良好": {
+    "min_score": 80,
+    "max_score": 89,
+    "color": "#87CEEB",
+    "description": "80-89分"
+  },
+  "中等": {
+    "min_score": 70,
+    "max_score": 79,
+    "color": "#F0E68C",
+    "description": "70-79分"
+  },
+  "及格": {
+    "min_score": 60,
+    "max_score": 69,
+    "color": "#FFB6C1",
+    "description": "60-69分"
+  },
+  "不及格": {
+    "min_score": 0,
+    "max_score": 59,
+    "color": "#FFA07A",
+    "description": "60分以下"
+  }
+}

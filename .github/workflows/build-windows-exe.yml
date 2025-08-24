@@ -1,0 +1,78 @@
+name: Build Windows EXE (PyInstaller)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ma/streamlit_version/**'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: ma/streamlit_version
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path requirements_streamlit.txt) {
+            pip install -r requirements_streamlit.txt
+          } else {
+            pip install streamlit pandas plotly openpyxl numpy pathlib
+          }
+          pip install pyinstaller
+
+      - name: Verify launcher exists
+        run: |
+          if (!(Test-Path run_app.py)) { echo "run_app.py not found"; exit 1 }
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller --noconfirm ^
+            --onefile ^
+            --name StudentScoresApp ^
+            --collect-all streamlit ^
+            --add-data "app.py;." ^
+            --add-data "analyzer.py;." ^
+            --add-data "database.py;." ^
+            --add-data "styles.py;." ^
+            --add-data "config.py;." ^
+            --add-data "config;config" ^
+            --add-data "pages;pages" ^
+            --hidden-import pandas ^
+            --hidden-import numpy ^
+            --hidden-import plotly ^
+            --hidden-import openpyxl ^
+            run_app.py
+
+      - name: Copy database and docs (optional)
+        run: |
+          New-Item -ItemType Directory -Path dist-extra -Force | Out-Null
+          if (Test-Path student_scores.db) { Copy-Item student_scores.db dist-extra/ }
+          if (Test-Path Windows安装使用说明.md) { Copy-Item Windows安装使用说明.md dist-extra/ }
+          if (Test-Path Windows用户使用指南.md) { Copy-Item Windows用户使用指南.md dist-extra/ }
+
+      - name: Archive artifacts
+        run: |
+          New-Item -ItemType Directory -Path upload -Force | Out-Null
+          Copy-Item dist/StudentScoresApp.exe upload/
+          if (Test-Path dist-extra) { Copy-Item dist-extra/* upload/ -Recurse }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudentScoresApp-windows
+          path: ma/streamlit_version/upload/*
+          if-no-files-found: error
+
