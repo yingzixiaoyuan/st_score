@@ -37,8 +37,6 @@ jobs:
         pyinstaller --noconfirm --onefile --console --name StudentScoresApp `
          --collect-all streamlit `
          --copy-metadata streamlit `
-         --hidden-import=streamlit.web.cli `
-         --hidden-import=streamlit.web.bootstrap `
          --add-data "app.py;." `
          --add-data "analyzer.py;." `
          --add-data "database.py;." `
@@ -49,7 +47,9 @@ jobs:
          --add-data "pages;pages" `
          --add-data "build_assets;build_assets" `
          --icon build_assets/icon.ico `
-         app.py
+         --additional-hooks-dir=./hooks `
+         --clean `
+         run_app.py
 
     - name: Archive artifacts
       run: |
