@@ -47,23 +47,7 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        pyinstaller --noconfirm ^
-          --onefile ^
-          --name StudentScoresApp ^
-          --collect-all streamlit ^
-          --add-data "app.py;." ^
-          --add-data "analyzer.py;." ^
-          --add-data "database.py;." ^
-          --add-data "styles.py;." ^
-          --add-data "config.py;." ^
-          --add-data "config;config" ^
-          --add-data "pages;pages" ^
-          --icon icon.ico ^
-          --hidden-import pandas ^
-          --hidden-import numpy ^
-          --hidden-import plotly ^
-          --hidden-import openpyxl ^
-          run_app.py
+        pyinstaller --noconfirm --onefile --name StudentScoresApp --collect-all streamlit --add-data "app.py;." --add-data "analyzer.py;." --add-data "database.py;." --add-data "styles.py;." --add-data "config.py;." --add-data "student_scores.db;." --add-data "config;config" --add-data "pages;pages" --add-data "build_assets;build_assets" --icon build_assets/icon.ico run_app.py
 
     - name: Archive artifacts
       run: |
