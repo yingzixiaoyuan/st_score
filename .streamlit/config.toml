@@ -6,4 +6,4 @@ headless = true
 port = 8501
 
 [global]
-developMode = false
+developmentMode = false
