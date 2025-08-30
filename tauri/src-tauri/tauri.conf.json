@@ -51,9 +51,6 @@
     ],
     "externalBin": [
       "binaries/st_score_analyzer"
-    ],
-    "resources": {
-      "binaries/_internal": "_internal/"
-    }
+    ]
   }
 }
