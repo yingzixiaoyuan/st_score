@@ -4,7 +4,7 @@
 """
 
 import streamlit as st
-from pages.color_settings import get_score_color, load_color_settings
+from webapp.pages.color_settings import get_score_color, load_color_settings
 
 
 def show_data_history_page(analyzer, exams_df):

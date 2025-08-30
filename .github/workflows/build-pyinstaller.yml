@@ -1,0 +1,182 @@
+name: Build PyInstaller App & Release
+
+on:
+  push:
+    branches:
+      - pyinstaller
+    tags:
+      - "py-v*.*.*"
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '是否创建Release'
+        required: true
+        default: false
+        type: boolean
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os-target.os }}
+    strategy:
+      matrix:
+        os-target:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+
+      - name: Generate application icon
+        run: |
+          cd build_assets
+          python make_icon.py
+          ls -la *.ico *.png || true
+
+      - name: Create executable (Ubuntu - onefile)
+        if: matrix.os-target.os == 'ubuntu-latest'
+        run: |
+          pyinstaller entrypoint.pyinstaller.onefile.spec
+          ls -la dist/
+
+      - name: Create executable (Windows - onedir)
+        if: matrix.os-target.os == 'windows-latest'
+        run: |
+          pyinstaller entrypoint.pyinstaller.spec
+          ls -la dist/
+          # Create a zip archive for Windows
+          cd dist
+          powershell Compress-Archive -Path entrypoint -DestinationPath ../st_score-${{ matrix.os-target.target }}.zip
+
+      - name: Create executable (macOS - onefile)
+        if: matrix.os-target.os == 'macos-latest'
+        run: |
+          pyinstaller entrypoint.pyinstaller.onefile.spec
+          ls -la dist/
+          # Create tar.gz for macOS
+          cd dist
+          tar -czf ../st_score-${{ matrix.os-target.target }}.tar.gz entrypoint
+
+      - name: Upload Linux artifacts
+        if: matrix.os-target.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: st_score-${{ matrix.os-target.target }}
+          path: dist/entrypoint
+          compression-level: 9
+
+      - name: Upload Windows artifacts
+        if: matrix.os-target.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: st_score-${{ matrix.os-target.target }}
+          path: st_score-${{ matrix.os-target.target }}.zip
+          compression-level: 9
+
+      - name: Upload macOS artifacts
+        if: matrix.os-target.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: st_score-${{ matrix.os-target.target }}
+          path: st_score-${{ matrix.os-target.target }}.tar.gz
+          compression-level: 9
+
+  create_release:
+    if: startsWith(github.ref, 'refs/tags/py-v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          find ./artifacts -type f -exec ls -la {} \;
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/py-v* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/py-v}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=dev-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release notes
+        run: |
+          cat > RELEASE_NOTES.md << 'EOF'
+          ## 学生成绩分析器 (PyInstaller版本) v${{ steps.get_version.outputs.VERSION }}
+          
+          ### 功能特性
+          - 📊 支持Excel数据导入和分析
+          - 📈 提供多维度成绩统计图表
+          - 🎨 支持自定义颜色配置
+          - 📚 完整的数据历史管理
+          - 💻 简单的可执行程序版本
+          
+          ### 下载说明
+          - **Windows**: 下载 `st_score-x86_64-pc-windows-msvc.zip`，解压后运行 `entrypoint.exe`
+          - **macOS (Intel)**: 下载 `st_score-x86_64-apple-darwin.tar.gz`，解压后运行 `entrypoint`
+          - **macOS (Apple Silicon)**: 下载 `st_score-aarch64-apple-darwin.tar.gz`，解压后运行 `entrypoint`
+          - **Linux**: 下载 `st_score-x86_64-unknown-linux-gnu`，添加执行权限后运行
+          
+          ### 使用方法
+          运行程序后，会自动在浏览器中打开 Streamlit 应用界面。
+          
+          ### 版本说明
+          这是使用PyInstaller打包的简化版本，适合：
+          - 快速部署和测试
+          - 不需要完整桌面应用体验的场景
+          - 服务器或无图形界面环境
+          
+          如需完整的桌面应用体验，请下载Tauri版本。
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/py-v') && github.ref_name || format('py-v{0}', steps.get_version.outputs.VERSION) }}
+          name: 学生成绩分析器 (PyInstaller) v${{ steps.get_version.outputs.VERSION }}
+          body_path: RELEASE_NOTES.md
+          files: ./artifacts/*
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/py-v') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

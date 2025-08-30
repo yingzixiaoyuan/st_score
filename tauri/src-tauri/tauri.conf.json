@@ -1,0 +1,59 @@
+{
+  "productName": "学生成绩分析器",
+  "version": "0.1.0",
+  "identifier": "com.student.score.analyzer",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "学生成绩分析器",
+        "width": 1400,
+        "height": 1000,
+        "resizable": true,
+        "fullscreen": false,
+        "label": "main",
+        "visible": false,
+        "dragDropEnabled": true,
+        "minWidth": 800,
+        "minHeight": 600
+      },
+      {
+        "title": "学生成绩分析器 - 启动中",
+        "width": 400,
+        "height": 300,
+        "resizable": false,
+        "decorations": false,
+        "center": true,
+        "label": "splashscreen",
+        "url": "splashscreen.html"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "publisher": "Student Score Analyzer Team",
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/st_score_analyzer"
+    ],
+    "resources": {
+      "binaries/_internal": "_internal/"
+    }
+  }
+}

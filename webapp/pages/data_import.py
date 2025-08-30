@@ -4,7 +4,7 @@
 """
 
 import streamlit as st
-from config import UPLOAD_CONFIG
+from webapp.config import UPLOAD_CONFIG
 import os
 
 

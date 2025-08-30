@@ -5,12 +5,15 @@
 
 import sqlite3
 import pandas as pd
+# 将数据库文件放置在当前目录下
+import os
+db_path = os.path.join(os.path.dirname(__file__), "student_scores.db")
 
 
 class DatabaseManager:
     """数据库管理器"""
 
-    def __init__(self, db_path="student_scores.db"):
+    def __init__(self, db_path=db_path):
         self.db_path = db_path
         self.init_database()
 
