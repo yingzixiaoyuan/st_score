@@ -22,6 +22,7 @@ if __name__ == "__main__":
         resolve_path("webapp/app.py"),
         f"--browser.serverAddress={config.browser_server_address}",
         "--browser.gatherUsageStats=false",
+        "--client.showSidebarNavigation=false",
         "--client.toolbarMode=viewer",
         "--global.developmentMode=false",
         "--server.headless=true",

@@ -56,11 +56,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller pillow
 
-      - name: Generate application icon
+      - name: Generate all application icons
         run: |
           cd build_assets
-          python make_icon.py
-          ls -la *.ico *.png || true
+          python universal_icon_generator.py
+          ls -la *.ico *.png *.icns || true
 
       - name: Create executable (Ubuntu - onefile)
         if: matrix.os-target.os == 'ubuntu-latest'

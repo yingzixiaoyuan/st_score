@@ -51,12 +51,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller pillow
 
-      - name: Generate application icons
+      - name: Generate all application icons
         run: |
           cd build_assets
-          python make_icon.py
-          python generate_tauri_icons.py
-          ls -la *.ico *.png || true
+          python universal_icon_generator.py
+          ls -la *.ico *.png *.icns || true
           ls -la ../tauri/src-tauri/icons/ || true
 
       - name: Install Rust

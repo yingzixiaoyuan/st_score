@@ -72,7 +72,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='build_assets/icon.ico' if (project_root / 'build_assets' / 'icon.ico').exists() else None,
+    icon='build_assets/icon.icns' if (project_root / 'build_assets' / 'icon.icns').exists() else 'build_assets/icon_high_quality.ico' if (project_root / 'build_assets' / 'icon_high_quality.ico').exists() else None,
 )
 
 coll = COLLECT(
