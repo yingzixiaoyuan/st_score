@@ -28,8 +28,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller pillow
+        pip install -r requirements_streamlit.txt
+        pip install pyinstaller
 
     - name: Generate all icons
       run: |
@@ -40,22 +40,29 @@ jobs:
         pyinstaller --noconfirm --onefile --console --name StudentScoresApp `
          --collect-all streamlit `
          --copy-metadata streamlit `
-         --add-data "webapp;webapp" `
+         --add-data ".streamlit;.streamlit" `
+         --add-data "app.py;." `
+         --add-data "analyzer.py;." `
+         --add-data "database.py;." `
+         --add-data "styles.py;." `
+         --add-data "config.py;." `
+         --add-data "student_scores.db;." `
          --add-data "config;config" `
-         --add-data "hooks;hooks" `
+         --add-data "pages;pages" `
          --add-data "build_assets;build_assets" `
          --icon build_assets/icon.ico `
          --additional-hooks-dir=./hooks `
          --clean `
-         entrypoint.py
+         run_app.py
 
     - name: Archive artifacts
       run: |
         $out = Join-Path $env:GITHUB_WORKSPACE 'upload'
         New-Item -ItemType Directory -Path $out -Force | Out-Null
         Copy-Item dist/StudentScoresApp.exe $out/
-        if (Test-Path config) { Copy-Item config $out/ -Recurse -Force }
-        if (Test-Path webapp/student_scores.db) { Copy-Item webapp/student_scores.db $out/ }
+        Copy-Item config $out/ -Recurse -Force
+        Copy-Item .streamlit $out/ -Recurse -Force
+        if (Test-Path dist-extra) { Copy-Item dist-extra/* $out/ -Recurse }
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -72,4 +79,4 @@ jobs:
         files: |
           upload/StudentScoresApp.exe
           upload/config/**
-          upload/student_scores.db
+          upload/.streamlit/**

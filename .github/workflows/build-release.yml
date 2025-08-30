@@ -1,0 +1,202 @@
+name: Build Student Score Analyzer Desktop App & Release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+    branches:
+      - main
+      - new
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os-target.os }}
+    strategy:
+      matrix:
+        os-target:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+
+      - name: Generate all application icons
+        run: |
+          cd build_assets
+          python universal_icon_generator.py
+          ls -la *.ico *.png *.icns || true
+          ls -la ../tauri/src-tauri/icons/ || true
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: ${{ matrix.os-target.target }}
+
+      # onedir mode doesn't work with ubuntu, build_appimage.sh fails
+      - name: Create Python executable for tauri (Ubuntu)
+        if: matrix.os-target.os == 'ubuntu-latest'
+        run: |
+          pyinstaller entrypoint.onefile.spec
+          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+
+      - name: Create Python executable for tauri (Windows)
+        if: matrix.os-target.os == 'windows-latest'
+        run: |
+          pyinstaller entrypoint.spec
+          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
+          cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
+
+      # onedir mode doesn't work with macos due to missing Python framework
+      - name: Create Python executable for tauri (macOS)
+        if: matrix.os-target.os == 'macos-latest'
+        run: |
+          pyinstaller entrypoint.onefile.spec
+          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+
+      - name: Install tauri dependencies (Ubuntu)
+        if: matrix.os-target.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y javascriptcoregtk-4.1 libsoup-3.0 webkit2gtk-4.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.6
+          run_install: false
+
+      - name: Install tauri frontend dependencies
+        working-directory: tauri
+        run: pnpm install
+
+      - name: Build tauri desktop app
+        working-directory: tauri
+        run: pnpm tauri build -t ${{ matrix.os-target.target }}
+
+      - name: Upload Tauri artifacts
+        id: artifact_upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: st_score_analyzer-${{ matrix.os-target.target }}
+          path: |
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/deb/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/nsis/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/dmg/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/appimage/
+          compression-level: 9
+
+  create_release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          find ./artifacts -type f -exec ls -la {} \;
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create release notes
+        run: |
+          cat > RELEASE_NOTES.md << 'EOF'
+          ## 📊 学生成绩分析器桌面应用 v${{ steps.get_version.outputs.VERSION }}
+          
+          ### ✨ 功能特性
+          - 📊 **数据导入分析**: 支持Excel文件导入，自动解析学生成绩数据
+          - 📈 **多维度统计**: 提供丰富的图表展示，包括分数分布、趋势分析等
+          - 🎨 **自定义配置**: 支持颜色主题设置，个性化界面显示
+          - 📚 **历史管理**: 完整的数据历史记录，方便追踪和对比
+          - 🖥️ **原生桌面应用**: 基于Tauri构建，启动快速，资源占用低
+          - 🌐 **内置Web界面**: 集成Streamlit应用，提供直观的操作界面
+          
+          ### 📦 下载说明
+          
+          #### Windows 用户
+          - 下载：`学生成绩分析器_x.x.x_x64-setup.exe` (安装包)
+          - 或下载：`学生成绩分析器_x.x.x_x64.msi` (MSI安装包)
+          - 双击安装后即可使用
+          
+          #### macOS 用户  
+          - **Intel Mac**: 下载 `.dmg` 文件，拖拽到Applications文件夹
+          - **Apple Silicon Mac**: 下载对应的 `.dmg` 文件
+          - 首次运行可能需要在"系统偏好设置 > 安全性与隐私"中允许运行
+          
+          #### Linux 用户
+          - **Ubuntu/Debian**: 下载 `.deb` 文件，使用 `sudo dpkg -i *.deb` 安装
+          - **通用Linux**: 下载 `.AppImage` 文件，添加执行权限后直接运行
+          
+          ### 🚀 使用方法
+          1. 启动应用程序
+          2. 等待启动画面加载完成
+          3. 应用会自动打开内置的Web界面
+          4. 开始导入和分析学生成绩数据
+          
+          ### 🔧 技术架构
+          - **前端**: Tauri + TypeScript + Vite
+          - **后端**: Python + Streamlit + SQLite
+          - **打包**: 跨平台原生应用，无需浏览器依赖
+          
+          ---
+          
+          如有问题，请在GitHub Issues中反馈。
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: 学生成绩分析器桌面应用 v${{ steps.get_version.outputs.VERSION }}
+          body_path: RELEASE_NOTES.md
+          files: ./artifacts/**/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

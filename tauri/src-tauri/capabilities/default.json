@@ -1,0 +1,9 @@
+{
+  "identifier": "default",
+  "windows": ["main", "splashscreen"],
+  "permissions": [
+    "core:default",
+    "shell:allow-execute",
+    "shell:allow-spawn"
+  ]
+}

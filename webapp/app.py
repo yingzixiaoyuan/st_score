@@ -3,16 +3,16 @@
 使用模块化结构，代码更清晰易维护
 """
 import streamlit as st
-from database import DatabaseManager
-from analyzer import ScoreAnalyzer
-from pages import (
+from webapp.database import DatabaseManager
+from webapp.analyzer import ScoreAnalyzer
+from webapp.pages import (
     show_data_import_page,
     show_exam_analysis_page,
     show_data_history_page
 )
-from pages.color_settings import show_color_settings_page
-from config import PAGE_CONFIG
-from styles import apply_custom_styles, configure_page
+from webapp.pages.color_settings import show_color_settings_page
+from webapp.config import PAGE_CONFIG
+from webapp.styles import apply_custom_styles, configure_page
 
 
 def main():
