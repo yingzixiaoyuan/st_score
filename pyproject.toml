@@ -27,3 +27,8 @@ build = [
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["webapp*"]
+exclude = ["tauri*", "hooks*", "config*", "build_assets*"]
