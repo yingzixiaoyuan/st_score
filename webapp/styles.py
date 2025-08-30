@@ -69,7 +69,7 @@ def apply_custom_styles():
 def configure_page():
     """配置页面设置"""
     st.set_page_config(
-        page_title="学生成绩分析器",
+        page_title="学生成绩分析器", 
         page_icon="📊",
         layout="wide",
         initial_sidebar_state="expanded"
