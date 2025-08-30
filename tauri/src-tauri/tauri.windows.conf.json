@@ -1,8 +1,5 @@
 {
   "bundle": {
-    "targets": ["nsis", "msi"],
-    "resources": {
-      "binaries/_internal": "_internal/"
-    }
+    "targets": ["nsis", "msi"]
   }
 }
