@@ -1,5 +1,8 @@
 name: Build Student Score Analyzer Desktop App & Release
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
