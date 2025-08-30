@@ -6,11 +6,11 @@ permissions:
 on:
   workflow_dispatch:
   push:
-    branches: [ "release", "main", "new" ]
+    branches: [ "release" ]
     tags:
     - 'v*'
   pull_request:
-    branches: [ "release", "main", "new" ]
+    branches: [ "release" ]
 
 jobs:
   build-windows:
