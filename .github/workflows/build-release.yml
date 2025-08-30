@@ -70,41 +70,83 @@ jobs:
       - name: Create Python executable for tauri (Ubuntu)
         if: matrix.os-target.os == 'ubuntu-latest'
         run: |
+          echo "[UBUNTU] Starting Python executable build..."
           pyinstaller entrypoint.onefile.spec
-          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          echo "[OK] PyInstaller build completed, checking output:"
+          ls -la dist/ || echo "[ERROR] dist directory not found"
+          
+          if [ -f "dist/entrypoint" ]; then
+            echo "[OK] Found executable dist/entrypoint"
+            file dist/entrypoint
+            
+            # Ensure target directory exists
+            mkdir -p ./tauri/src-tauri/binaries/
+            
+            # Copy file
+            cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+            
+            echo "[OK] File copied successfully, verification:"
+            ls -la ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          else
+            echo "[ERROR] Executable dist/entrypoint not found"
+            echo "Available files:"
+            find dist/ -type f 2>/dev/null || echo "No files generated"
+            exit 1
+          fi
 
       - name: Create Python executable for tauri (Windows)
         if: matrix.os-target.os == 'windows-latest'
         run: |
+          echo "[WINDOWS] Starting Python executable build..."
           pyinstaller entrypoint.spec
-          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
-          cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
+          echo "[OK] PyInstaller build completed, checking output:"
+          ls -la dist/ || echo "[ERROR] dist directory not found"
+          
+          if [ -f "dist/entrypoint/entrypoint.exe" ]; then
+            echo "[OK] Found executable dist/entrypoint/entrypoint.exe"
+            
+            # Ensure target directory exists
+            mkdir -p ./tauri/src-tauri/binaries/
+            
+            # Copy files
+            cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
+            cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
+            
+            echo "[OK] Files copied successfully, verification:"
+            ls -la ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
+            ls -la ./tauri/src-tauri/binaries/_internal/
+          else
+            echo "[ERROR] Executable dist/entrypoint/entrypoint.exe not found"
+            echo "Available files:"
+            find dist/ -type f 2>/dev/null || echo "No files generated"
+            exit 1
+          fi
 
       # onedir mode doesn't work with macos due to missing Python framework
       - name: Create Python executable for tauri (macOS)
         if: matrix.os-target.os == 'macos-latest'
         run: |
-          echo "📱 开始构建macOS可执行文件..."
+          echo "[MACOS] Starting macOS executable build..."
           pyinstaller entrypoint.onefile.spec
-          echo "✅ PyInstaller构建完成，检查输出文件："
-          ls -la dist/ || echo "❌ dist目录不存在"
+          echo "[OK] PyInstaller build completed, checking output:"
+          ls -la dist/ || echo "[ERROR] dist directory not found"
           
           if [ -f "dist/entrypoint" ]; then
-            echo "✅ 找到可执行文件 dist/entrypoint"
+            echo "[OK] Found executable dist/entrypoint"
             file dist/entrypoint
             
-            # 确保目标目录存在
+            # Ensure target directory exists
             mkdir -p ./tauri/src-tauri/binaries/
             
-            # 复制文件
+            # Copy file
             cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
             
-            echo "✅ 文件复制成功，验证："
+            echo "[OK] File copied successfully, verification:"
             ls -la ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
           else
-            echo "❌ 未找到可执行文件 dist/entrypoint"
-            echo "可用的文件："
-            find dist/ -type f 2>/dev/null || echo "没有文件生成"
+            echo "[ERROR] Executable dist/entrypoint not found"
+            echo "Available files:"
+            find dist/ -type f 2>/dev/null || echo "No files generated"
             exit 1
           fi
 
