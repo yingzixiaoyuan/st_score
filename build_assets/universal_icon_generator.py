@@ -409,7 +409,7 @@ class UniversalIconGenerator:
         
         print(f"\n[TOOLS] 开始生成图标...")
         for task_func, args, description in tasks:
-            print(f"\n📋 {description}")
+            print(f"\n[TASK] {description}")
             print("-" * 40)
             try:
                 task_func(*args)
@@ -434,12 +434,12 @@ class UniversalIconGenerator:
             for failure in self.results['failed']:
                 print(f"   • {failure}")
         
-        print(f"\n📁 生成的文件 ({len(self.results['files_created'])}个):")
+        print(f"\n[DIR] 生成的文件 ({len(self.results['files_created'])}个):")
         for file_path in self.results['files_created'][:10]:  # 只显示前10个
             path = Path(file_path)
             if path.exists():
                 size = path.stat().st_size / 1024
-                print(f"   📄 {path.name:<30} ({size:.1f}KB)")
+                print(f"   [FILE] {path.name:<30} ({size:.1f}KB)")
         
         if len(self.results['files_created']) > 10:
             print(f"   ... 和其他 {len(self.results['files_created']) - 10} 个文件")
