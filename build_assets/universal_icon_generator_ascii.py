@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-学生成绩分析器 - 通用图标生成器
-一个文件生成所有平台所需的图标格式
+Student Score Analyzer - Universal Icon Generator (ASCII-only version)
+Generate all platform icon formats in one script.
+This version uses only ASCII characters to ensure Windows compatibility.
 
-支持的输出格式：
-- Windows: .ico (多尺寸)
-- macOS: .icns (原生格式)
-- Linux: .png (各种尺寸)
-- Tauri: 完整的图标集
-- Web: favicon等
+Supported output formats:
+- Windows: .ico (multi-size)
+- macOS: .icns (native format)  
+- Linux: .png (various sizes)
+- Tauri: Complete icon set
+- Web: favicon etc
 
-作者: AI Assistant
-版本: 1.0.0
+Author: AI Assistant
+Version: 1.0.0 (ASCII-only)
 """
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -22,7 +23,7 @@ import os
 from typing import Tuple, List, Optional
 
 class UniversalIconGenerator:
-    """通用图标生成器类"""
+    """Universal Icon Generator Class (ASCII-only)"""
     
     def __init__(self, output_dir: Path = None):
         self.base_dir = Path(__file__).parent if output_dir is None else output_dir
@@ -34,31 +35,31 @@ class UniversalIconGenerator:
         }
     
     def create_gradient(self, size: int, start_color: tuple, end_color: tuple) -> Image.Image:
-        """创建渐变背景"""
+        """Create gradient background"""
         base = Image.new("RGB", (size, size), start_color)
         top = Image.new("RGB", (size, size), end_color)
         mask = Image.linear_gradient("L").resize((size, size))
         return Image.composite(top, base, mask)
     
     def rounded_rect_mask(self, size: int, radius: int) -> Image.Image:
-        """创建圆角矩形蒙版"""
+        """Create rounded rectangle mask"""
         mask = Image.new("L", (size, size), 0)
         draw = ImageDraw.Draw(mask)
         draw.rounded_rectangle([0, 0, size, size], radius=radius, fill=255)
         return mask
     
     def create_base_icon_design(self, size: int = 512) -> Image.Image:
-        """创建基础图标设计 - 学生成绩分析器主题"""
-        print(f"[ICON] 创建基础图标设计 ({size}x{size})")
+        """Create base icon design - Student Score Analyzer theme"""
+        print(f"[ICON] Creating base icon design ({size}x{size})")
         
-        # 背景渐变：靛蓝 → 青色
+        # Background gradient: indigo -> cyan
         gradient = self.create_gradient(size, (79, 70, 229), (6, 182, 212))
         
-        # 圆角矩形裁剪
+        # Rounded rectangle clipping
         mask = self.rounded_rect_mask(size, radius=int(size * 0.18))
         gradient.putalpha(mask)
         
-        # 添加内阴影/高光
+        # Add inner shadow/highlight
         shadow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         sd = ImageDraw.Draw(shadow)
         sd.ellipse([
@@ -67,7 +68,7 @@ class UniversalIconGenerator:
         ], fill=(0, 0, 0, 40))
         shadow = shadow.filter(ImageFilter.GaussianBlur(radius=int(size * 0.04)))
         
-        # 前景：简洁的条形图形状（代表成绩分析）
+        # Foreground: simple bar chart (representing score analysis)
         fg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         fgd = ImageDraw.Draw(fg)
         bar_w = int(size * 0.12)
@@ -75,7 +76,7 @@ class UniversalIconGenerator:
         gap = int(size * 0.06)
         bottom = size - margin
         colors = [(255, 255, 255, a) for a in (220, 235, 255)]
-        heights = [0.45, 0.65, 0.85]  # 不同高度的柱状图
+        heights = [0.45, 0.65, 0.85]  # Different height bar charts
         x = margin
         
         for idx, h in enumerate(heights):
@@ -88,7 +89,7 @@ class UniversalIconGenerator:
             )
             x += bar_w + gap
         
-        # 合成最终图标
+        # Compose final icon
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         canvas.alpha_composite(gradient)
         canvas.alpha_composite(shadow)
@@ -97,9 +98,9 @@ class UniversalIconGenerator:
         return canvas
     
     def create_multi_size_ico(self, base_image: Image.Image, output_path: Path) -> bool:
-        """创建多尺寸ICO文件（Windows）"""
+        """Create multi-size ICO file (Windows)"""
         try:
-            print(f"[WIN] 创建Windows ICO文件: {output_path.name}")
+            print(f"[WIN] Creating Windows ICO file: {output_path.name}")
             sizes = [16, 24, 32, 48, 64, 128, 256]
             images = []
             
@@ -108,40 +109,40 @@ class UniversalIconGenerator:
                 images.append(resized)
                 print(f"   [OK] {size}x{size}")
             
-            # 保存ICO文件，包含所有尺寸
+            # Save ICO file with all sizes
             images[0].save(output_path, format='ICO', sizes=[(s, s) for s in sizes])
             self.results['files_created'].append(str(output_path))
-            self.results['success'].append(f"ICO文件: {output_path.name}")
+            self.results['success'].append(f"ICO file: {output_path.name}")
             return True
             
         except Exception as e:
-            print(f"   [ERROR] 创建ICO文件失败: {e}")
-            self.results['failed'].append(f"ICO文件: {e}")
+            print(f"   [ERROR] Failed to create ICO file: {e}")
+            self.results['failed'].append(f"ICO file: {e}")
             return False
     
     def create_icns_file(self, base_image: Image.Image, output_path: Path) -> bool:
-        """创建ICNS文件（macOS原生格式）"""
+        """Create ICNS file (macOS native format)"""
         try:
-            print(f"[MAC] 创建macOS ICNS文件: {output_path.name}")
+            print(f"[MAC] Creating macOS ICNS file: {output_path.name}")
             
-            # 检查是否在macOS上
+            # Check if on macOS
             is_macos = sys.platform == 'darwin'
             
             if not is_macos:
-                print(f"   [WARN] 非macOS系统，跳过原生ICNS生成")
-                # 在非macOS系统上，创建一个兼容的PNG文件作为替代
+                print(f"   [WARN] Non-macOS system, skip native ICNS generation")
+                # On non-macOS systems, create compatible PNG file as fallback
                 fallback_path = output_path.with_suffix('.png')
                 base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
-                print(f"   [OK] 创建PNG替代文件: {fallback_path.name}")
+                print(f"   [OK] Creating PNG fallback file: {fallback_path.name}")
                 self.results['files_created'].append(str(fallback_path))
-                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                self.results['success'].append(f"ICNS fallback file: {fallback_path.name}")
                 return True
             
-            # 创建临时的iconset目录
+            # Create temporary iconset directory
             iconset_dir = output_path.parent / f"{output_path.stem}.iconset"
             iconset_dir.mkdir(exist_ok=True)
             
-            # macOS图标所需的所有尺寸
+            # All sizes required for macOS icons
             icon_sizes = [
                 (16, "icon_16x16.png"),
                 (32, "icon_16x16@2x.png"),
@@ -155,67 +156,67 @@ class UniversalIconGenerator:
                 (1024, "icon_512x512@2x.png"),
             ]
             
-            # 生成所有尺寸的PNG文件
+            # Generate all sizes of PNG files
             for size, filename in icon_sizes:
                 resized = base_image.resize((size, size), Image.LANCZOS)
                 resized.save(iconset_dir / filename, "PNG")
                 print(f"   [OK] {filename} ({size}x{size})")
             
-            # 检查iconutil是否可用
+            # Check iconutil availability
             iconutil_available = subprocess.run(['which', 'iconutil'], 
                                                capture_output=True).returncode == 0
             
             if not iconutil_available:
-                print(f"   [WARN] iconutil不可用，使用PNG替代")
+                print(f"   [WARN] iconutil not available, using PNG fallback")
                 fallback_path = output_path.with_suffix('.png') 
                 base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
-                # 清理临时文件
+                # Clean temporary files
                 subprocess.run(['rm', '-rf', str(iconset_dir)])
                 self.results['files_created'].append(str(fallback_path))
-                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                self.results['success'].append(f"ICNS fallback file: {fallback_path.name}")
                 return True
             
-            # 使用macOS原生工具创建ICNS文件
+            # Use macOS native tool to create ICNS file
             result = subprocess.run([
                 'iconutil', '-c', 'icns', str(iconset_dir), '-o', str(output_path)
             ], capture_output=True, text=True)
             
             if result.returncode == 0:
-                print(f"   [OK] ICNS文件创建成功")
-                # 清理临时文件
+                print(f"   [OK] ICNS file created successfully")
+                # Clean temporary files
                 subprocess.run(['rm', '-rf', str(iconset_dir)])
                 self.results['files_created'].append(str(output_path))
-                self.results['success'].append(f"ICNS文件: {output_path.name}")
+                self.results['success'].append(f"ICNS file: {output_path.name}")
                 return True
             else:
-                print(f"   [ERROR] iconutil失败: {result.stderr}")
-                # 如果iconutil失败，创建PNG替代
+                print(f"   [ERROR] iconutil failed: {result.stderr}")
+                # If iconutil failed, create PNG fallback
                 fallback_path = output_path.with_suffix('.png')
                 base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
                 subprocess.run(['rm', '-rf', str(iconset_dir)])
                 self.results['files_created'].append(str(fallback_path))
-                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                self.results['success'].append(f"ICNS fallback file: {fallback_path.name}")
                 return True
                 
         except Exception as e:
-            print(f"   [ERROR] 创建ICNS文件失败: {e}")
-            # 异常情况下也创建PNG替代
+            print(f"   [ERROR] Failed to create ICNS file: {e}")
+            # Also create PNG fallback on exception
             try:
                 fallback_path = output_path.with_suffix('.png')
                 base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG") 
                 self.results['files_created'].append(str(fallback_path))
-                self.results['success'].append(f"ICNS异常替代文件: {fallback_path.name}")
+                self.results['success'].append(f"ICNS exception fallback file: {fallback_path.name}")
                 return True
             except:
-                self.results['failed'].append(f"ICNS文件: {e}")
+                self.results['failed'].append(f"ICNS file: {e}")
                 return False
     
     def create_png_sizes(self, base_image: Image.Image) -> bool:
-        """创建各种尺寸的PNG文件"""
+        """Create PNG files of various sizes"""
         try:
-            print(f"[PNG] 创建PNG文件集")
+            print(f"[PNG] Creating PNG file set")
             
-            # 常用PNG尺寸
+            # Common PNG sizes
             png_sizes = [
                 (16, "icon_16.png"),
                 (32, "icon_32.png"),
@@ -240,26 +241,26 @@ class UniversalIconGenerator:
                     print(f"   [ERROR] {filename}: {e}")
             
             if success_count > 0:
-                self.results['success'].append(f"PNG文件: {success_count}个尺寸")
+                self.results['success'].append(f"PNG files: {success_count} sizes")
                 return True
             else:
-                self.results['failed'].append("PNG文件: 全部失败")
+                self.results['failed'].append("PNG files: all failed")
                 return False
                 
         except Exception as e:
-            print(f"   [ERROR] 创建PNG文件失败: {e}")
-            self.results['failed'].append(f"PNG文件: {e}")
+            print(f"   [ERROR] Failed to create PNG files: {e}")
+            self.results['failed'].append(f"PNG files: {e}")
             return False
     
     def create_tauri_icons(self, base_image: Image.Image) -> bool:
-        """创建Tauri应用所需的图标"""
+        """Create icons for Tauri app"""
         try:
-            print(f"[APP] 创建Tauri应用图标")
+            print(f"[APP] Creating Tauri app icons")
             
-            # 确保Tauri图标目录存在
+            # Ensure Tauri icon directory exists
             self.tauri_icons_dir.mkdir(parents=True, exist_ok=True)
             
-            # Tauri所需的图标尺寸
+            # Icon sizes required by Tauri
             tauri_icons = {
                 "32x32.png": (32, 32),
                 "128x128.png": (128, 128),
@@ -279,7 +280,7 @@ class UniversalIconGenerator:
                 except Exception as e:
                     print(f"   [ERROR] {filename}: {e}")
             
-            # 复制ICO文件到Tauri目录
+            # Copy ICO file to Tauri directory
             try:
                 ico_source = self.base_dir / "icon.ico"
                 if ico_source.exists():
@@ -288,53 +289,53 @@ class UniversalIconGenerator:
                     print(f"   [OK] icon.ico")
                     success_count += 1
             except Exception as e:
-                print(f"   [WARN] 复制ICO文件失败: {e}")
+                print(f"   [WARN] Failed to copy ICO file: {e}")
             
-            # 为macOS创建ICNS文件（兼容版本）
+            # Create ICNS file for macOS (compatible version)
             try:
                 icns_dest = self.tauri_icons_dir / "icon.icns"
                 if sys.platform == 'darwin':
-                    # 在macOS上尝试创建真正的ICNS文件
+                    # On macOS try to create real ICNS file
                     png_temp = self.tauri_icons_dir / "icon_temp.png"
                     base_image.resize((512, 512), Image.LANCZOS).save(png_temp, "PNG")
                     
-                    # 检查iconutil是否可用
+                    # Check iconutil availability
                     iconutil_available = subprocess.run(['which', 'iconutil'], 
                                                        capture_output=True).returncode == 0
                     if iconutil_available:
-                        # 使用真正的ICNS格式
+                        # Use real ICNS format
                         subprocess.run(['cp', str(png_temp), str(icns_dest)])
-                        png_temp.unlink()  # 删除临时文件
+                        png_temp.unlink()  # Delete temp file
                     else:
-                        # iconutil不可用，重命名PNG为icns
+                        # iconutil not available, rename PNG to icns
                         png_temp.rename(icns_dest)
                 else:
-                    # 非macOS系统，创建PNG文件但命名为.icns（用于兼容）
+                    # Non-macOS system, create PNG file but name it .icns (for compatibility)
                     base_image.resize((512, 512), Image.LANCZOS).save(icns_dest, "PNG")
                 
                 print(f"   [OK] icon.icns")
                 success_count += 1
             except Exception as e:
-                print(f"   [WARN] 创建Tauri ICNS失败: {e}")
+                print(f"   [WARN] Failed to create Tauri ICNS: {e}")
             
             if success_count > 0:
-                self.results['success'].append(f"Tauri图标: {success_count}个文件")
+                self.results['success'].append(f"Tauri icons: {success_count} files")
                 return True
             else:
-                self.results['failed'].append("Tauri图标: 全部失败")
+                self.results['failed'].append("Tauri icons: all failed")
                 return False
                 
         except Exception as e:
-            print(f"   [ERROR] 创建Tauri图标失败: {e}")
-            self.results['failed'].append(f"Tauri图标: {e}")
+            print(f"   [ERROR] Failed to create Tauri icons: {e}")
+            self.results['failed'].append(f"Tauri icons: {e}")
             return False
     
     def create_web_icons(self, base_image: Image.Image) -> bool:
-        """创建Web应用图标（favicon等）"""
+        """Create web app icons (favicon etc)"""
         try:
-            print(f"[WEB] 创建Web应用图标")
+            print(f"[WEB] Creating web app icons")
             
-            # Web图标尺寸
+            # Web icon sizes
             web_icons = [
                 (16, "favicon-16x16.png"),
                 (32, "favicon-32x32.png"),
@@ -355,7 +356,7 @@ class UniversalIconGenerator:
                 except Exception as e:
                     print(f"   [ERROR] {filename}: {e}")
             
-            # 创建favicon.ico
+            # Create favicon.ico
             try:
                 favicon_sizes = [16, 32, 48]
                 favicon_images = []
@@ -372,103 +373,103 @@ class UniversalIconGenerator:
                 print(f"   [ERROR] favicon.ico: {e}")
             
             if success_count > 0:
-                self.results['success'].append(f"Web图标: {success_count}个文件")
+                self.results['success'].append(f"Web icons: {success_count} files")
                 return True
             else:
-                self.results['failed'].append("Web图标: 全部失败")
+                self.results['failed'].append("Web icons: all failed")
                 return False
                 
         except Exception as e:
-            print(f"   [ERROR] 创建Web图标失败: {e}")
-            self.results['failed'].append(f"Web图标: {e}")
+            print(f"   [ERROR] Failed to create web icons: {e}")
+            self.results['failed'].append(f"Web icons: {e}")
             return False
     
     def generate_all_icons(self) -> bool:
-        """生成所有平台的图标"""
-        print("[ICON] 学生成绩分析器 - 通用图标生成器")
+        """Generate icons for all platforms"""
+        print("[ICON] Student Score Analyzer - Universal Icon Generator")
         print("=" * 60)
         
-        # 创建基础图标设计
-        base_icon = self.create_base_icon_design(1024)  # 使用高分辨率作为基础
+        # Create base icon design
+        base_icon = self.create_base_icon_design(1024)  # Use high resolution as base
         
-        # 保存预览图
+        # Save preview image
         preview_path = self.base_dir / "icon_preview.png"
         base_icon.resize((512, 512), Image.LANCZOS).save(preview_path, "PNG")
-        print(f"[SAVE] 保存预览图: {preview_path.name}")
+        print(f"[SAVE] Saving preview image: {preview_path.name}")
         self.results['files_created'].append(str(preview_path))
         
-        # 生成各种格式
+        # Generate various formats
         tasks = [
             (self.create_multi_size_ico, (base_icon, self.base_dir / "icon.ico"), "Windows ICO"),
-            (self.create_multi_size_ico, (base_icon, self.base_dir / "icon_high_quality.ico"), "高质量ICO"),
+            (self.create_multi_size_ico, (base_icon, self.base_dir / "icon_high_quality.ico"), "High Quality ICO"),
             (self.create_icns_file, (base_icon, self.base_dir / "icon.icns"), "macOS ICNS"),
-            (self.create_png_sizes, (base_icon,), "PNG尺寸集"),
-            (self.create_tauri_icons, (base_icon,), "Tauri图标"),
-            (self.create_web_icons, (base_icon,), "Web图标"),
+            (self.create_png_sizes, (base_icon,), "PNG Size Set"),
+            (self.create_tauri_icons, (base_icon,), "Tauri Icons"),
+            (self.create_web_icons, (base_icon,), "Web Icons"),
         ]
         
-        print(f"\n[TOOLS] 开始生成图标...")
+        print(f"\n[TOOLS] Starting icon generation...")
         for task_func, args, description in tasks:
             print(f"\n[TASK] {description}")
             print("-" * 40)
             try:
                 task_func(*args)
             except Exception as e:
-                print(f"[ERROR] {description} 失败: {e}")
+                print(f"[ERROR] {description} failed: {e}")
                 self.results['failed'].append(f"{description}: {e}")
         
         return len(self.results['failed']) == 0
     
     def print_summary(self):
-        """打印生成结果摘要"""
+        """Print generation result summary"""
         print("\n" + "=" * 60)
-        print("[CHART] 图标生成结果摘要")
+        print("[CHART] Icon Generation Result Summary")
         print("=" * 60)
         
-        print(f"\n[OK] 成功生成:")
+        print(f"\n[OK] Successfully generated:")
         for success in self.results['success']:
-            print(f"   • {success}")
+            print(f"   * {success}")
         
         if self.results['failed']:
-            print(f"\n[ERROR] 生成失败:")
+            print(f"\n[ERROR] Generation failed:")
             for failure in self.results['failed']:
-                print(f"   • {failure}")
+                print(f"   * {failure}")
         
-        print(f"\n[DIR] 生成的文件 ({len(self.results['files_created'])}个):")
-        for file_path in self.results['files_created'][:10]:  # 只显示前10个
+        print(f"\n[DIR] Generated files ({len(self.results['files_created'])} files):")
+        for file_path in self.results['files_created'][:10]:  # Show only first 10
             path = Path(file_path)
             if path.exists():
                 size = path.stat().st_size / 1024
                 print(f"   [FILE] {path.name:<30} ({size:.1f}KB)")
         
         if len(self.results['files_created']) > 10:
-            print(f"   ... 和其他 {len(self.results['files_created']) - 10} 个文件")
+            print(f"   ... and other {len(self.results['files_created']) - 10} files")
         
-        print(f"\n[INFO] 使用建议:")
-        print(f"   • PyInstaller (macOS):  icon='build_assets/icon.icns'")
-        print(f"   • PyInstaller (Windows): icon='build_assets/icon.ico'")
-        print(f"   • Tauri应用: 自动使用 tauri/src-tauri/icons/ 中的文件")
-        print(f"   • Web应用: 使用 favicon.ico 和相关PNG文件")
+        print(f"\n[INFO] Usage suggestions:")
+        print(f"   * PyInstaller (macOS):  icon='build_assets/icon.icns'")
+        print(f"   * PyInstaller (Windows): icon='build_assets/icon.ico'")
+        print(f"   * Tauri app: Auto-use files in tauri/src-tauri/icons/")
+        print(f"   * Web app: Use favicon.ico and related PNG files")
 
 def main():
-    """主函数"""
+    """Main function"""
     try:
         generator = UniversalIconGenerator()
         success = generator.generate_all_icons()
         generator.print_summary()
         
         if success:
-            print(f"\n[DONE] 所有图标生成完成！")
+            print(f"\n[DONE] All icons generation completed!")
         else:
-            print(f"\n[WARN] 部分图标生成失败，请检查上述错误信息")
+            print(f"\n[WARN] Some icons failed to generate, please check error messages above")
         
         return success
         
     except KeyboardInterrupt:
-        print(f"\n[WARN] 用户中断操作")
+        print(f"\n[WARN] User interrupted operation")
         return False
     except Exception as e:
-        print(f"\n[ERROR] 程序异常: {e}")
+        print(f"\n[ERROR] Program exception: {e}")
         return False
 
 if __name__ == "__main__":

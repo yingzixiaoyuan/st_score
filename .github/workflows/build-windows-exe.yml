@@ -33,7 +33,7 @@ jobs:
 
     - name: Generate all icons
       run: |
-        python build_assets/universal_icon_generator.py
+        python build_assets/universal_icon_generator_ascii.py
 
     - name: Build EXE with PyInstaller
       run: |

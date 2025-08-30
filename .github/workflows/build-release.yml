@@ -56,7 +56,7 @@ jobs:
       - name: Generate all application icons
         run: |
           cd build_assets
-          python universal_icon_generator.py
+          python universal_icon_generator_ascii.py
           ls -la *.ico *.png *.icns || true
           ls -la ../tauri/src-tauri/icons/ || true
 
