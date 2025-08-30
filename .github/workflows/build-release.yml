@@ -85,8 +85,29 @@ jobs:
       - name: Create Python executable for tauri (macOS)
         if: matrix.os-target.os == 'macos-latest'
         run: |
+          echo "📱 开始构建macOS可执行文件..."
           pyinstaller entrypoint.onefile.spec
-          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          echo "✅ PyInstaller构建完成，检查输出文件："
+          ls -la dist/ || echo "❌ dist目录不存在"
+          
+          if [ -f "dist/entrypoint" ]; then
+            echo "✅ 找到可执行文件 dist/entrypoint"
+            file dist/entrypoint
+            
+            # 确保目标目录存在
+            mkdir -p ./tauri/src-tauri/binaries/
+            
+            # 复制文件
+            cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+            
+            echo "✅ 文件复制成功，验证："
+            ls -la ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          else
+            echo "❌ 未找到可执行文件 dist/entrypoint"
+            echo "可用的文件："
+            find dist/ -type f 2>/dev/null || echo "没有文件生成"
+            exit 1
+          fi
 
       - name: Install tauri dependencies (Ubuntu)
         if: matrix.os-target.os == 'ubuntu-latest'
