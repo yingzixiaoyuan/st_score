@@ -1,5 +1,5 @@
 {
-  "productName": "学生成绩分析器",
+  "productName": "Student Score Analyzer",
   "version": "0.1.0",
   "identifier": "com.student.score.analyzer",
   "build": {
@@ -12,7 +12,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "学生成绩分析器",
+        "title": "Student Score Analyzer",
         "width": 1400,
         "height": 1000,
         "resizable": true,
@@ -24,7 +24,7 @@
         "minHeight": 600
       },
       {
-        "title": "学生成绩分析器 - 启动中",
+        "title": "Student Score Analyzer - Starting",
         "width": 400,
         "height": 300,
         "resizable": false,

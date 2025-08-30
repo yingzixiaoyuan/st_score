@@ -1,0 +1,201 @@
+name: Build Student Score Analyzer Desktop App & Release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+    branches:
+      - main
+      - release
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os-target.os }}
+    strategy:
+      matrix:
+        os-target:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # Use UV for faster Python dependency management
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python environment
+        run: uv python install
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv sync --all-extras --group build
+          uv pip install pyinstaller pillow
+
+      - name: Generate application icons
+        run: |
+          cd build_assets
+          uv run python universal_icon_generator_ascii.py
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: ${{ matrix.os-target.target }}
+
+      # Simplified Python executable creation (Ubuntu)
+      - name: Create Python executable for tauri (Ubuntu)
+        if: matrix.os-target.os == 'ubuntu-latest'
+        run: |
+          uv run pyinstaller entrypoint.onefile.spec
+          mkdir -p ./tauri/src-tauri/binaries/
+          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer
+
+      # Windows with onedir mode for better compatibility
+      - name: Create Python executable for tauri (Windows)
+        if: matrix.os-target.os == 'windows-latest'
+        run: |
+          uv run pyinstaller entrypoint.spec
+          mkdir -p ./tauri/src-tauri/binaries/
+          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer
+          cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
+
+      # macOS with onefile mode
+      - name: Create Python executable for tauri (macOS)
+        if: matrix.os-target.os == 'macos-latest'
+        run: |
+          uv run pyinstaller entrypoint.onefile.spec
+          mkdir -p ./tauri/src-tauri/binaries/
+          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer
+
+      - name: Install tauri dependencies (Ubuntu)
+        if: matrix.os-target.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y javascriptcoregtk-4.1 libsoup-3.0 webkit2gtk-4.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.6
+          run_install: false
+
+      - name: Install tauri frontend dependencies
+        working-directory: tauri
+        run: pnpm install
+
+      - name: Build tauri desktop app
+        working-directory: tauri
+        run: pnpm tauri build -t ${{ matrix.os-target.target }}
+
+      - name: Upload Tauri artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-score-analyzer-${{ matrix.os-target.target }}
+          path: |
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/deb/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/nsis/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/msi/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/dmg/
+            tauri/src-tauri/target/${{ matrix.os-target.target }}/release/bundle/appimage/
+          compression-level: 9
+
+  create_release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            VERSION=$(grep "^version" pyproject.toml | cut -d'"' -f2)
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Python for changelog
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Generate changelog
+        run: |
+          pip install git-cliff==2.6.0
+          git fetch --tags --unshallow || git fetch --tags
+          if git cliff --latest --strip header > CHANGELOG.md 2>/dev/null; then
+            echo "Auto-generated changelog:"
+            cat CHANGELOG.md
+          else
+            echo "Could not generate changelog, using manual release notes"
+            cat > CHANGELOG.md << 'EOF'
+          ## Student Score Analyzer Desktop App v${{ steps.get_version.outputs.VERSION }}
+          
+          ### Features
+          - **Data Import & Analysis**: Excel file import and automatic parsing
+          - **Multi-dimensional Statistics**: Rich charts and trend analysis  
+          - **Custom Configuration**: Color themes and personalization
+          - **History Management**: Complete data tracking and comparison
+          - **Native Desktop App**: Tauri-based with fast startup
+          - **Built-in Web Interface**: Integrated Streamlit interface
+          
+          ### Download Instructions
+          
+          #### Windows Users
+          - Download installer: `.exe` or `.msi` file
+          
+          #### macOS Users  
+          - Download `.dmg` file and drag to Applications
+          
+          #### Linux Users
+          - Ubuntu/Debian: `.deb` package
+          - General Linux: `.AppImage` file
+          
+          For issues, please report on GitHub Issues.
+          EOF
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: Student Score Analyzer Desktop App v${{ steps.get_version.outputs.VERSION }}
+          body_path: CHANGELOG.md
+          files: ./artifacts/**/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
