@@ -79,9 +79,8 @@ jobs:
         run: |
           uv run pyinstaller entrypoint.spec
           mkdir -p ./tauri/src-tauri/binaries/
-          # Windows needs .exe extension for Tauri to find the binary properly
-          # Copy both platform-specific and generic .exe versions  
-          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
+          # Windows needs .exe extension - use platform-specific config
+          # Copy generic .exe version for Windows-specific Tauri config
           cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer.exe
           cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
 
