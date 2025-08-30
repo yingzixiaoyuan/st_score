@@ -9,8 +9,7 @@ on:
     tags:
       - "v*.*.*"
     branches:
-      - main
-      - new
+      - release
 
 defaults:
   run:
