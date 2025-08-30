@@ -6,7 +6,7 @@ authors = [
     {name = "Student Score Analyzer Team"}
 ]
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "streamlit>=1.28.0",
@@ -14,21 +14,16 @@ dependencies = [
     "plotly>=5.15.0",
     "openpyxl>=3.1.0",
     "pillow>=10.0.0",
-    "pydantic>=2.0.0",
+    "numpy>=1.21.0",
     "pydantic-settings>=2.0.0",
 ]
 
 [dependency-groups]
 build = [
-    "pyinstaller>=6.0.0",
-    "pillow>=10.0.0",
+    "git-cliff>=2.8.0",
+    "pyinstaller>=6.13.0",
 ]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[tool.uv]
-dev-dependencies = [
-    "pyinstaller>=6.0.0",
-]
