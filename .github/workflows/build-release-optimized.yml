@@ -78,7 +78,7 @@ jobs:
         run: |
           uv run pyinstaller entrypoint.spec
           mkdir -p ./tauri/src-tauri/binaries/
-          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          cp dist/entrypoint/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
           cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
 
       # macOS with onefile mode
@@ -88,7 +88,6 @@ jobs:
           uv run pyinstaller entrypoint.onefile.spec
           mkdir -p ./tauri/src-tauri/binaries/
           cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
-          cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer
 
       - name: Install tauri dependencies (Ubuntu)
         if: matrix.os-target.os == 'ubuntu-latest'
