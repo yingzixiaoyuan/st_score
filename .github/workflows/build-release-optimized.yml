@@ -80,7 +80,7 @@ jobs:
           uv run pyinstaller entrypoint.spec
           mkdir -p ./tauri/src-tauri/binaries/
           # Windows needs .exe extension for Tauri to find the binary properly
-          cp dist/entrypoint/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          cp dist/entrypoint/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
           cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
 
       # macOS with onefile mode

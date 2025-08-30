@@ -1,8 +1,5 @@
 {
   "bundle": {
-    "targets": ["nsis", "msi"],
-    "externalBin": [
-      "binaries/st_score_analyzer.exe"
-    ]
+    "targets": ["nsis", "msi"]
   }
 }
