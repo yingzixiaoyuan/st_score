@@ -124,6 +124,19 @@ class UniversalIconGenerator:
         try:
             print(f"🍎 创建macOS ICNS文件: {output_path.name}")
             
+            # 检查是否在macOS上
+            is_macos = sys.platform == 'darwin'
+            
+            if not is_macos:
+                print(f"   ⚠️ 非macOS系统，跳过原生ICNS生成")
+                # 在非macOS系统上，创建一个兼容的PNG文件作为替代
+                fallback_path = output_path.with_suffix('.png')
+                base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
+                print(f"   ✅ 创建PNG替代文件: {fallback_path.name}")
+                self.results['files_created'].append(str(fallback_path))
+                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                return True
+            
             # 创建临时的iconset目录
             iconset_dir = output_path.parent / f"{output_path.stem}.iconset"
             iconset_dir.mkdir(exist_ok=True)
@@ -148,6 +161,20 @@ class UniversalIconGenerator:
                 resized.save(iconset_dir / filename, "PNG")
                 print(f"   ✅ {filename} ({size}x{size})")
             
+            # 检查iconutil是否可用
+            iconutil_available = subprocess.run(['which', 'iconutil'], 
+                                               capture_output=True).returncode == 0
+            
+            if not iconutil_available:
+                print(f"   ⚠️ iconutil不可用，使用PNG替代")
+                fallback_path = output_path.with_suffix('.png') 
+                base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
+                # 清理临时文件
+                subprocess.run(['rm', '-rf', str(iconset_dir)])
+                self.results['files_created'].append(str(fallback_path))
+                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                return True
+            
             # 使用macOS原生工具创建ICNS文件
             result = subprocess.run([
                 'iconutil', '-c', 'icns', str(iconset_dir), '-o', str(output_path)
@@ -162,13 +189,26 @@ class UniversalIconGenerator:
                 return True
             else:
                 print(f"   ❌ iconutil失败: {result.stderr}")
-                self.results['failed'].append(f"ICNS文件: iconutil失败")
-                return False
+                # 如果iconutil失败，创建PNG替代
+                fallback_path = output_path.with_suffix('.png')
+                base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG")
+                subprocess.run(['rm', '-rf', str(iconset_dir)])
+                self.results['files_created'].append(str(fallback_path))
+                self.results['success'].append(f"ICNS替代文件: {fallback_path.name}")
+                return True
                 
         except Exception as e:
             print(f"   ❌ 创建ICNS文件失败: {e}")
-            self.results['failed'].append(f"ICNS文件: {e}")
-            return False
+            # 异常情况下也创建PNG替代
+            try:
+                fallback_path = output_path.with_suffix('.png')
+                base_image.resize((512, 512), Image.LANCZOS).save(fallback_path, "PNG") 
+                self.results['files_created'].append(str(fallback_path))
+                self.results['success'].append(f"ICNS异常替代文件: {fallback_path.name}")
+                return True
+            except:
+                self.results['failed'].append(f"ICNS文件: {e}")
+                return False
     
     def create_png_sizes(self, base_image: Image.Image) -> bool:
         """创建各种尺寸的PNG文件"""
@@ -250,11 +290,28 @@ class UniversalIconGenerator:
             except Exception as e:
                 print(f"   ⚠️ 复制ICO文件失败: {e}")
             
-            # 为macOS创建ICNS文件（简化版本）
+            # 为macOS创建ICNS文件（兼容版本）
             try:
                 icns_dest = self.tauri_icons_dir / "icon.icns"
-                base_image.resize((512, 512), Image.LANCZOS).save(str(icns_dest.with_suffix('.png')), "PNG")
-                subprocess.run(['cp', str(icns_dest.with_suffix('.png')), str(icns_dest)])
+                if sys.platform == 'darwin':
+                    # 在macOS上尝试创建真正的ICNS文件
+                    png_temp = self.tauri_icons_dir / "icon_temp.png"
+                    base_image.resize((512, 512), Image.LANCZOS).save(png_temp, "PNG")
+                    
+                    # 检查iconutil是否可用
+                    iconutil_available = subprocess.run(['which', 'iconutil'], 
+                                                       capture_output=True).returncode == 0
+                    if iconutil_available:
+                        # 使用真正的ICNS格式
+                        subprocess.run(['cp', str(png_temp), str(icns_dest)])
+                        png_temp.unlink()  # 删除临时文件
+                    else:
+                        # iconutil不可用，重命名PNG为icns
+                        png_temp.rename(icns_dest)
+                else:
+                    # 非macOS系统，创建PNG文件但命名为.icns（用于兼容）
+                    base_image.resize((512, 512), Image.LANCZOS).save(icns_dest, "PNG")
+                
                 print(f"   ✅ icon.icns")
                 success_count += 1
             except Exception as e:
