@@ -70,6 +70,7 @@ jobs:
         run: |
           uv run pyinstaller entrypoint.onefile.spec
           mkdir -p ./tauri/src-tauri/binaries/
+          # Only create platform-specific name - Tauri will auto-match
           cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
 
       # Windows with onedir mode for better compatibility
@@ -78,7 +79,10 @@ jobs:
         run: |
           uv run pyinstaller entrypoint.spec
           mkdir -p ./tauri/src-tauri/binaries/
-          cp dist/entrypoint/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
+          # Windows needs .exe extension for Tauri to find the binary properly
+          # Copy both platform-specific and generic .exe versions  
+          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}.exe
+          cp dist/entrypoint/entrypoint.exe ./tauri/src-tauri/binaries/st_score_analyzer.exe
           cp -r dist/entrypoint/_internal ./tauri/src-tauri/binaries/
 
       # macOS with onefile mode
@@ -87,6 +91,7 @@ jobs:
         run: |
           uv run pyinstaller entrypoint.onefile.spec
           mkdir -p ./tauri/src-tauri/binaries/
+          # Only create platform-specific name - Tauri will auto-match
           cp dist/entrypoint ./tauri/src-tauri/binaries/st_score_analyzer-${{ matrix.os-target.target }}
 
       - name: Install tauri dependencies (Ubuntu)

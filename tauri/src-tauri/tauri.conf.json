@@ -50,7 +50,11 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      "binaries/st_score_analyzer"
-    ]
+      "binaries/st_score_analyzer",
+      "binaries/st_score_analyzer.exe"
+    ],
+    "resources": {
+      "binaries/_internal": "_internal/"
+    }
   }
 }
